@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+
+  <title>Javascript Promise</title>
+
+  <meta name="description" content="">
+  <meta name="author" content="TruongSinh Tran-Nguyen">
+
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <link rel="stylesheet" href="/bower_components/reveal.js/css/reveal.css">
+  <link rel="stylesheet" href="/bower_components/reveal.js/css/theme/default.css" id="theme">
+
+  <!-- For syntax highlighting -->
+  <link rel="stylesheet" href="/bower_components/reveal.js/lib/css/zenburn.css">
+
+
+</head>
+
+<body>
+
+<div class="reveal">
+
+<!-- Any section element inside of this container is displayed as a slide -->
+<div class="slides">
+<section>
+  <h1>Javascript Promise</h1>
+
+  <p>TruongSinh Tran-Nguyen</p>
+
+  <p>Lead Developer</p>
+
+  <p>Smarp Oy</p>
+</section>
+
+<section>
+  <h2>Agenda</h2>
+
+  <ol>
+    <li>Promise</li>
+    <li>Asynchronous Javascript</li>
+    <li>Why promise? Why NOT callback?</li>
+    <li>Why callback? Why NOT promise?</li>
+    <li>Do's and Dont's</li>
+  </ol>
+
+  <aside class="notes">
+    Oh hey, these are some notes. They'll be hidden in your presentation, but you can see them if you open the speaker notes window (hit 's' on your keyboard).
+  </aside>
+</section>
+
+<section>
+  <section>
+    <h2>Promise</h2>
+
+    <ul>
+      <li>commitment (by someone) to do or not do something.</li>
+      <li class='fragment'>usually fulfilled</li>
+    </ul>
+  </section>
+  <section>
+    <h2>Promise</h2>
+    <img src="broken-promises.jpg"/>
+  </section>
+  <section>
+    <h2>Promise</h2>
+    <img src='waiting.jpg'/>
+  </section>
+</section>
+
+<section>
+  <h2>Asynchronous Javascript</h2>
+
+  <ul style='width: 100%'>
+    <li>Single-threaded (sort of)</li>
+    <li>IO-driven
+					<pre><code data-trim>
+fs.readFile('/etc/passwd', function (err, data) {
+  if (err) throw err;
+  console.log(data);
+});
+            </code></pre>
+    </li>
+    <li>Event-driven
+					<pre><code data-trim>
+var readable = getReadableStreamSomehow();
+readable.on('readable', function() {
+  // there is some data to read now
+})
+          </code></pre>
+    </li>
+  </ul>
+</section>
+
+<section>
+  <section>
+    <h2>Why promise? Why not callback?</h2>
+    <ol style='width:100%'>
+      <li>
+        Parallel async: sequential-fallback vs wish-for-luck vs ...
+        <pre><code data-trim>
+var beforeAsync1 = Date().now();
+myFirstAsync(function(err, res1){
+  if(err) return myErrorHandling(err);
+  console.log(Date.now() - beforeAsync1) // 500
+  var beforeAsync2 = Date().now();
+    mySecondAsync(function(err, res2){
+      if(err) return myErrorHandling(err);
+      console.log(Date.now() - beforeAsync2) // 600
+      console.log(Date.now() - beforeAsync1) // 1100
+      doIt(res1, res2);
+  });
+});
+// well yes, you can use Step or Async module, but../
+        </code></pre>
+        <pre><code data-trim>
+var beforeAsync = Date().now();
+q.all([myPromise1(), myPromise1()])
+  .spread(function(res1, res2){
+    console.log(Date.now() - beforeAsync) // 600, not 1100
+    doIt(res1, res2);
+  })
+          </code></pre>
+      </li>
+    </ol>
+  </section>
+  <section>
+    <h2>Why promise? Why not callback?</h2>
+    <ol style='width:100%'>
+      <li value="2">Sequential async: callback hell vs chainable
+      <pre><code data-trim>
+myFirstAsync(function(err, res1){
+  if(err) return myErrorHandling(err);
+  mySecondAsync(res1, function(err, res2){
+    if(err) return myErrorHandling(err);
+      myThirdAsync(res2, function(err, res3){
+        if(err) return myErrorHandling(err);
+        myFourthAsync(res3, function(err, res4){
+          if(err) return myErrorHandling(err);
+          // you know, I can continue like this forever...
+        });
+      });
+    });
+  });
+});
+      </code></pre>
+      </li>
+    </ol>
+  </section>
+  <section>
+    <h2>Why promise? Why not callback?</h2>
+    <ol style='width:100%'>
+      <li value="2">Sequential async: callback hell vs chainable
+      <pre><code data-trim>
+myFirstPromise()
+  .then(function(res1){
+    return mySecondPromise(res1);
+  })
+  .then(function(res2){
+    return mySecondPromise(res2);
+  })
+  .then(function(res3){
+    return mySecondPromise(res3);
+  })
+  .then(function(res4){
+    return mySecondPromise(res4);
+  })
+;
+      </code></pre>
+      </li>
+    </ol>
+  </section>
+  <section>
+    <h2>Why promise? Why not callback?</h2>
+    <ol style='width:100%'>
+      <li value="3">implicitly propagate errors
+      <pre><code data-trim>
+myFirstAsync(function(err, res1){
+  if(err) return myErrorHandling(err);
+  mySecondAsync(res1, function(err, res2){
+    if(err) return myErrorHandling(err);
+    doIt(res2);
+  });
+});
+    </code></pre>
+    <pre><code data-trim>
+myFirstPromise
+  .then(function(res1){
+    return mySecondPromise(res1);
+  })
+  .then(function(res2){
+    doIt(res2);
+  })
+  .catch(function(err){
+    myErrorHandling(err);
+  })
+  //.then(function(){
+  //  doSthElse()
+  //})
+  ;
+        </code></pre>
+      </li>
+    </ol>
+  </section>
+  <section>
+    <h2>Why promise? Why not callback?</h2>
+    <h3>Summary</h3>
+    <ol style='width:100%'>
+      <li>Superior parallel async</li>
+      <li>Superior sequential async</li>
+      <li>
+        Superior centralized error handling <br/>
+        <code>throw</code>, <code>try</code>,<code>catch</code>,<code>finally</code> equivalent for async programing
+      </li>
+    </ol>
+  </section>
+</section>
+
+<section>
+  <h2>Why callback? Why NOT promise?</h2>
+  <ul>
+    <li>more code, more allocations</li>
+    <li>political issue among NodeJS community</li>
+  </ul>
+</section>
+
+<section>
+  <section>
+    <h2>Do's and Dont's!</h2>
+    <ul>
+      <li>Do NOT use <code>throw new Error()</code>, use <code>return q.reject(new Error())</code> instead</code></li>
+      <li>Just like throw, reject <code>new Error()</code> object, not other types.</li>
+      <li><code>q.all([myA, myB])</code>, not <code>q.all(myA, myB)</code></li>
+    </ul>
+  </section>
+</section>
+
+<section>
+  <h1>THE END</h1>
+
+  <h3>By TruongSinh Tran-Nguyen</h3>
+</section>
+
+</div>
+
+</div>
+
+<script src="/bower_components/reveal.js/lib/js/head.min.js"></script>
+<script src="/bower_components/reveal.js/js/reveal.min.js"></script>
+<script src="/bower_components/reveal.js/plugin/highlight/highlight.js"></script>
+<script src="/bower_components/reveal.js/plugin/zoom-js/zoom.js"></script>
+<script src="/bower_components/reveal.js/plugin/notes/notes.js"></script>
+
+<script src="../config.js"></script>
+
+</body>
+</html>
