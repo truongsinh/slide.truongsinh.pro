@@ -384,6 +384,49 @@ myDefer.promise
       </li>
     </ul>
   </section>
+  <section>
+    <h2>Do's and Dont's!</h2>
+    <ul style='width: 100%'>
+      <li>Avoid using Connect/Express <strong>synchronous</strong> middleware
+      <pre><code class='javascript' data-trim>
+var express = require('express');
+var q = require('q');
+var app = express();
+app.use(function cookiePromise(req, res, next){
+  var cookieDefer = q.defer();
+  req.cookiePromise = cookieDefer.promise;
+  next(); // as soon as we have req.cookiePromise, call next!!!
+  myCookieParserFromHeaders(req, function(err, cookieMap){
+    if(err) return cookieDefer.reject(err);
+    cookieDefer.resolve(cookieMap);
+  });
+});
+app.use(function sessionPromise(req, res, next){
+  req.sessionPromise = req.cookiePromise
+    .then(function(cookieMap){
+      var sessionDefer = q.defer();
+      mySession(cookieMap.sId, function(err, session){
+        if(err) return sessionDefer.reject(err);
+        sessionDefer.resolve(session);
+      });
+    })
+  next(); // as soon as we have req.sessionPromise, call next!!!
+});
+app.get('/', function(req, res){
+  res.send('Hello world');
+});
+app.get('/async', function(req, res){
+  res.send('This is your cookie:');
+  req.sessionCookie.then(function(session){
+    res.send(JSON.stringify(session));
+    // Express 3.x does not need res.end() ?!
+    // res.end();
+});
+});
+      </code></pre>
+      </li>
+    </ul>
+  </section>
 </section>
 
 <section>
