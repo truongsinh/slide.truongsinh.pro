@@ -19,6 +19,12 @@
 
   <!-- For syntax highlighting -->
   <link rel="stylesheet" href="/bower_components/reveal.js/lib/css/zenburn.css">
+  <style>
+    .reveal pre {
+      width: 100%;
+      font-size: .7em;
+    }
+  </style>
 
 
 </head>
@@ -51,7 +57,12 @@
   </ol>
 
   <aside class="notes">
-    Oh hey, these are some notes. They'll be hidden in your presentation, but you can see them if you open the speaker notes window (hit 's' on your keyboard).
+    (hit 's' on your keyboard)
+    <ul>
+      <li>How many of you have heard of Promise/Future/Defer?</li>
+      <li>How many of you are extensively using it?</li>
+      <li>This presentation aims are to encourage people to use it, and my own expirences of using it</li>
+    </ul>
   </aside>
 </section>
 
@@ -63,6 +74,10 @@
       <li>commitment (by someone) to do or not do something.</li>
       <li class='fragment'>usually fulfilled</li>
     </ul>
+    <aside class="notes">
+      Let's start with a real life promise, and then put it into JS context.
+      Go down...
+    </aside>
   </section>
   <section>
     <h2>Promise</h2>
@@ -80,7 +95,7 @@
   <ul style='width: 100%'>
     <li>Single-threaded (sort of)</li>
     <li>IO-driven
-					<pre><code data-trim>
+					<pre><code class='javascript' data-trim>
 fs.readFile('/etc/passwd', function (err, data) {
   if (err) throw err;
   console.log(data);
@@ -88,7 +103,7 @@ fs.readFile('/etc/passwd', function (err, data) {
             </code></pre>
     </li>
     <li>Event-driven
-					<pre><code data-trim>
+					<pre><code class='javascript' data-trim>
 var readable = getReadableStreamSomehow();
 readable.on('readable', function() {
   // there is some data to read now
@@ -104,7 +119,7 @@ readable.on('readable', function() {
     <ol style='width:100%'>
       <li>
         Parallel async: sequential-fallback vs wish-for-luck vs ...
-        <pre><code data-trim>
+        <pre><code class='javascript' style='max-height: 300px' data-trim>
 var beforeAsync1 = Date().now();
 myFirstAsync(function(err, res1){
   if(err) return myErrorHandling(err);
@@ -119,7 +134,7 @@ myFirstAsync(function(err, res1){
 });
 // well yes, you can use Step or Async module, but../
         </code></pre>
-        <pre><code data-trim>
+        <pre><code class='javascript' data-trim>
 var beforeAsync = Date().now();
 q.all([myPromise1(), myPromise1()])
   .spread(function(res1, res2){
@@ -134,7 +149,7 @@ q.all([myPromise1(), myPromise1()])
     <h2>Why promise? Why not callback?</h2>
     <ol style='width:100%'>
       <li value="2">Sequential async: callback hell vs chainable
-      <pre><code data-trim>
+      <pre><code class='javascript' data-trim>
 myFirstAsync(function(err, res1){
   if(err) return myErrorHandling(err);
   mySecondAsync(res1, function(err, res2){
@@ -157,7 +172,7 @@ myFirstAsync(function(err, res1){
     <h2>Why promise? Why not callback?</h2>
     <ol style='width:100%'>
       <li value="2">Sequential async: callback hell vs chainable
-      <pre><code data-trim>
+      <pre><code class='javascript' data-trim>
 myFirstPromise()
   .then(function(res1){
     return mySecondPromise(res1);
@@ -180,7 +195,7 @@ myFirstPromise()
     <h2>Why promise? Why not callback?</h2>
     <ol style='width:100%'>
       <li value="3">implicitly propagate errors
-      <pre><code data-trim>
+      <pre><code class='javascript' data-trim>
 myFirstAsync(function(err, res1){
   if(err) return myErrorHandling(err);
   mySecondAsync(res1, function(err, res2){
@@ -189,7 +204,7 @@ myFirstAsync(function(err, res1){
   });
 });
     </code></pre>
-    <pre><code data-trim>
+    <pre><code class='javascript' style='max-height: 300px' data-trim>
 myFirstPromise
   .then(function(res1){
     return mySecondPromise(res1);
@@ -200,7 +215,7 @@ myFirstPromise
   .catch(function(err){
     myErrorHandling(err);
   })
-  //.then(function(){
+  //.finally(function(){
   //  doSthElse()
   //})
   ;
@@ -234,17 +249,155 @@ myFirstPromise
   <section>
     <h2>Do's and Dont's!</h2>
     <ul>
+      <li>Promise should be for and ONLY for IO, not events</li>
       <li>Do NOT use <code>throw new Error()</code>, use <code>return q.reject(new Error())</code> instead</code></li>
       <li>Just like throw, reject <code>new Error()</code> object, not other types.</li>
       <li><code>q.all([myA, myB])</code>, not <code>q.all(myA, myB)</code></li>
+      <li>Always have error handler, even the with old-fashioned <code>console.error()</code></li>
+    </ul>
+  </section>
+  <section>
+    <h2>Do's and Dont's!</h2>
+    <ul style='width: 100%'>
+      <li>One-to-Many
+      <pre><code class='javascript' data-trim>
+var aPromise = myAsync();
+aPromise.then(function(a){
+  myFirstFunction(a);
+});
+aPromise.then(function(a){
+  mySecondFunction(a);
+});
+aPromise.then(function(a){
+  myThirdFunction(a);
+});
+// also remember to do error handling
+      </code></pre>
+      </li>
+    </ul>
+  </section>
+  <section>
+    <h2>Do's and Dont's!</h2>
+    <ul style='width: 100%'>
+      <li>Many-to-One
+      <pre><code class='javascript' data-trim>
+var aPromise = myFirstAsync();
+var bPromise = mySecondAsync();
+var cPromise = myThirdAsync();
+q.all([aPromise, bPromise, cPromise])
+  .spread(function(a, b, c){
+    doSth(a, b, c);
+  })
+  // or
+  // .then(function(valueArray){
+  //   var a = valueArray[0];
+  //   var b = valueArray[1];
+  //   var c = valueArray[2];
+  //   doSth(a, b, c);
+  // })
+;
+// also remember to do error handling
+      </code></pre>
+      </li>
+    </ul>
+  </section>
+  <section>
+    <h2>Do's and Dont's!</h2>
+    <ul style='width: 100%'>
+      <li>Divide-to-conquer
+      <pre><code class='javascript' data-trim>
+var aPromise = myFirstAsync();
+var bPromise = mySecondAsync();
+var cPromise = myThirdAsync();
+q.all([aPromise, bPromise, cPromise])
+  .spread(function(a, b, c){
+    var promiseC = doSth(a, b, c);
+    var promiseD = doAnotherSth(a, b, c);
+    var promiseE = doSthElse(a, b, c);
+    return q.all([promiseC, promiseD, promiseE]);
+  })
+  .spread(function(c, d, e){
+    doYetAnotherSth(c, d, e);
+  })
+;
+// also remember to do error handling
+      </code></pre>
+      </li>
+    </ul>
+  </section>
+  <section>
+    <h2>Do's and Dont's!</h2>
+    <ul style='width: 100%'>
+      <li>Use closure if necessary</li>
+      <li>Do NOT mess up promise object, defer object, and the fulfilled/resolved value
+      <pre><code class='javascript' data-trim>
+var q = require('q');
+(function(){
+  var myDefer = q.defer();
+  fs.readFile('/etc/passwd', function (err, data) {
+    if (err) {
+      myDefer.reject(err);
+    } else if (data !== whatWeWant) {
+      myDefer.reject(new NotWeWantError());
+    } else {
+      myDefer.resolve(data);
+    }
+  });
+  return myDefer.promise;
+)()
+  .then(function(ourWantedContent){
+    doSth(ourWantedContent);
+  })
+// error handler here
+      </code></pre>
+      </li>
+    </ul>
+  </section>
+  <section>
+    <h2>Do's and Dont's!</h2>
+    <ul style='width: 100%'>
+      <li><em>Denodify</em>
+      <pre><code class='javascript' style='max-height: 200px' data-trim>
+// in lib.js
+q = require('q');
+q_defer = q.defer;
+q.defer = function () {
+  var d = q_defer.apply(q, arguments);
+  d.denodify = function (err, res) {
+    if (err) return d.reject(err);
+    return d.resolve(res);
+  };
+  return d;
+};
+      </code></pre>
+      <pre><code class='javascript' style='max-height: 300px' data-trim>
+require('./lib.js');
+q = require('q');
+var myDefer = q.defer();
+fs.readFile('/etc/passwd', myDefer.denodify);
+myDefer.promise
+  .then(function(ourWantedContent){
+    doSth(ourWantedContent);
+  })
+// error handler here
+      </code></pre>
+      </li>
     </ul>
   </section>
 </section>
 
 <section>
-  <h1>THE END</h1>
+  <h2>Read more</h2>
+  <ul>
+    <li>Q - the most popular library for JS Promise by Kris Kowal</li>
+    <li>$q - AngularJS's promise service</li>
+  </ul>
+</section>
+<section>
+  <h1>Thank you</h1>
 
-  <h3>By TruongSinh Tran-Nguyen</h3>
+  <h3>@truongsinhtn</h3>
+  <h3>i@truongsinh.pro</h3>
 </section>
 
 </div>
