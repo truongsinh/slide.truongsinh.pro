@@ -225,6 +225,27 @@ myFirstPromise
   </section>
   <section>
     <h2>Why promise? Why not callback?</h2>
+    <ol style='width:100%'>
+      <li value="4">
+        Reusable components made easy
+        <pre><code class='javascript' data-trim>
+// moongose
+model.findOne({age: 20, height: 160}, function(err, person){
+  invite(person);
+});
+
+var personPromise = model.findOne({age: 20, height: 160});
+var personTallerPromise = personPromise.find({height: 170});
+personTallerPromise.find({gpa:4})
+  .then(function(personTallerWithGpa){
+    invite(personTallerWithGpa);
+  });
+        </code></pre>
+      </li>
+    </ol>
+  </section>
+  <section>
+    <h2>Why promise? Why not callback?</h2>
     <h3>Summary</h3>
     <ol style='width:100%'>
       <li>Superior parallel async</li>
@@ -233,6 +254,7 @@ myFirstPromise
         Superior centralized error handling <br/>
         <code>throw</code>, <code>try</code>,<code>catch</code>,<code>finally</code> equivalent for async programing
       </li>
+      <li>Reusable/Extendable components</li>
     </ol>
   </section>
 </section>
@@ -380,6 +402,34 @@ myDefer.promise
     doSth(ourWantedContent);
   })
 // error handler here
+      </code></pre>
+      </li>
+    </ul>
+  </section>
+  <section>
+    <h2>Do's and Dont's!</h2>
+    <ul style='width: 100%'>
+      <li><em>Thenable object / Noop promise</em>
+      <pre><code class='javascript' data-trim>
+var noopPromise = {
+  then: function(){}
+};
+var thenableObject = {
+  then: function(){
+    return "Three";
+  }
+}
+myPromise
+  .then(function(num){
+    if(num === 1) return "Two";
+    if(num === 2) return myOtherPromise(val);
+    if(num === 3) return thenableObject;
+    return noopPromise;
+  })
+  .then(function(str){
+    console.log(str);
+  })
+// err handler here
       </code></pre>
       </li>
     </ul>
