@@ -273,16 +273,23 @@ personTallerPromise.find({gpa:4})
 </section>
 
 <section>
-  <section>
-    <h2>Do's and Dont's!</h2>
-    <ul>
-      <li>Promise should be for and ONLY for IO, not events</li>
-      <li>Do NOT use <code>throw new Error()</code>, use <code>return q.reject(new Error())</code> instead</code></li>
-      <li>Just like throw, reject <code>new Error()</code> object, not other types.</li>
-      <li><code>q.all([myA, myB])</code>, not <code>q.all(myA, myB)</code></li>
-      <li>Always have error handler, even the with old-fashioned <code>console.error()</code></li>
-    </ul>
-  </section>
+<section>
+  <h2>Do's and Dont's!</h2>
+  <ul>
+    <li>timeout to reject</li>
+    <li>Resolve or reject ONCE and ONLY ONCE</li>
+    <li>Promise should be for and ONLY for IO, not events</li>
+    <li><code>q.all([myA, myB])</code>, not <code>q.all(myA, myB)</code></li>
+  </ul>
+</section>
+<section>
+  <h2>Do's and Dont's!</h2>
+  <ul>
+    <li>Do NOT use <code>throw new Error()</code>, use <code>return q.reject(new Error())</code> instead</code></li>
+    <li>Just like throw, reject <code>new Error()</code> object, not other types.</li>
+    <li>Always have error handler, even the with old-fashioned <code>console.error()</code></li>
+  </ul>
+</section>
   <section>
     <h2>Do's and Dont's!</h2>
     <ul style='width: 100%'>
@@ -489,6 +496,7 @@ app.get('/async', function(req, res){
   <ul>
     <li>Q - the most popular library for JS Promise by Kris Kowal</li>
     <li>$q - AngularJS's promise service</li>
+    <li>Mongoose promise interface</li>
   </ul>
 </section>
 <section>
