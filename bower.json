@@ -15,6 +15,7 @@
     "tests"
   ],
   "dependencies": {
+    "qrcodejs": "git@github.com:davidshimjs/qrcodejs.git",
     "reveal.js": "~2.5.0"
   }
 }
