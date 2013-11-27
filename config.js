@@ -26,16 +26,11 @@ Reveal.initialize({
       return !!document.body.classList;
     } },
 
-    // Remote control your reveal.js presentation using a touch device
-    { src: '/bower_components/reveal.js/plugin/remotes/remotes.js', async: true, condition: function() {
-      return !!document.body.classList;
-    } },
-
     // MathJax
     { src: '/bower_components/reveal.js/plugin/math/math.js', async: true }
   ],
-  controls: false,
-  progress: false,
+  controls: true,
+  progress: true,
   history: true,
   center: false
   //theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
